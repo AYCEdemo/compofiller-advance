@@ -75,14 +75,16 @@ int main() {
     {
         VBlankIntrWait();
 
-        s16 sr = sine_table[frame&1023];
-        s16 cr = sine_table[(frame+256)&1023];
+        s32 sr = sine_table[frame&1023];
+        s32 cr = sine_table[(frame+256)&1023];
+        s32 px = 120;
+        s32 py = 40;
         REG_BG2PA = cr >> 7;
         REG_BG2PB = sr >> 7;
         REG_BG2PC = -sr >> 7;
         REG_BG2PD = cr >> 7;
-        REG_BG2X = (((s32)sr) >> 1) - (160 << 8);
-        REG_BG2Y = (((s32)cr) >> 1) - (40 << 8);
+        REG_BG2X = ((-px * cr - py * sr) >> 7) + (64 << 8);
+        REG_BG2Y = ((px * sr - py * cr) >> 7) + (64 << 8);
 
         pal_bg_mem[0]=0xffff;
         mmFrame();
