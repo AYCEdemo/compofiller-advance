@@ -5,10 +5,12 @@
 #include "tonc_irq.h"
 #include "tonc_memmap.h"
 #include "tonc_text.h"
+#include "tonc_video.h"
 
 #include "res/sound.h"
 
-#define MM_CHS 8
+#define MM_CHS   8
+#define MAX_GRAD 31
 
 typedef struct {
     u8 mod[MM_SIZEOF_MODCH*MM_CHS];
@@ -19,24 +21,63 @@ typedef struct {
 
 u8 mm_mixbuf[MM_MIXLEN_31KHZ];
 
+struct {
+    u32 cnt;
+    u32 stat;
+    u16 bgcnt[4];
+    u16 bgofs[4][2];
+    BgAffineDest affines[80];
+} dma_data;
+u16 cur_grad = 0;
+
+
 extern u8 soundbank[];
 extern s16 sine_table[1024];
 
+
 void vbi() {
     mmVBlank();
+    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+    REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(80);
+    REG_BG0CNT = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
+    REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
+    REG_BG2CNT = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16;
+    REG_DMA0CNT = 0;
+    cur_grad = MAX_GRAD - 1;
+}
+
+void vci() {
+    REG_BLDY = MAX_GRAD;
+    REG_DISPSTAT = (u16)dma_data.stat; // needed to be written first so the next line can fire right away
+    REG_DMA0SAD = (u32)&dma_data;
+    REG_DMA0DAD = (u32)&REG_DISPCNT;
+    REG_DMA0CNT = DMA_COUNT(12) | DMA_SRC_INC | DMA_DST_INC | DMA_AT_HBLANK | DMA_32NOW;
 }
 
 void hbi() {
-
+    REG_BLDY = cur_grad >> 1;
+    if (cur_grad == MAX_GRAD - 1) {
+        REG_DMA0SAD = (u32)(&dma_data.affines[1]);
+        REG_DMA0DAD = (u32)&REG_BG2PA;
+        REG_DMA0CNT = DMA_COUNT(4) | DMA_SRC_INC | DMA_DST_RELOAD | DMA_AT_HBLANK | DMA_REPEAT | DMA_32NOW;
+    }
+    else if (cur_grad == 0) {
+        REG_DISPSTAT &= ~DSTAT_HBL_IRQ;
+    }
+    cur_grad--;
 }
 
 int main() {
     // WS0=3/1, WS1=4/4, WS2=8/8, SRAM=8, prefetch on
     REG_WAITCNT = 0x4317;
     REG_DISPCNT = DCNT_BLANK;
-    REG_BG0CNT = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
-    REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
-    REG_BG2CNT = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16;
+    REG_DISPSTAT = 0;
+    REG_BLDCNT = BLD_BG0 | BLD_BG1 | BLD_BG2 | BLD_BLACK;
+    dma_data.cnt = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+    dma_data.stat = DSTAT_VBL_IRQ | DSTAT_HBL_IRQ;
+    dma_data.bgcnt[0] = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
+    dma_data.bgcnt[1] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
+    dma_data.bgcnt[2] = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16 | BG_WRAP;
 
     txt_bup_1toX((void*)(MEM_VRAM), toncfontTiles, toncfontTilesLen, 8, 0);
     txt_bup_1toX((void*)(MEM_VRAM+32768), toncfontTiles, toncfontTilesLen, 4, 0);
@@ -61,19 +102,26 @@ int main() {
     mmInit(&mm_setup);
     mmStart(MOD_WILLOWS, MM_PLAY_LOOP);
 
-    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
-
     irq_init(NULL);
     irq_add(II_VBLANK, &vbi);
     irq_add(II_HBLANK, &hbi);
+    irq_add(II_VCOUNT, &vci);
+    vid_vsync(); // just to be safe, i'm sure irq_enable() also sets STAT
     irq_enable(II_VBLANK);
     irq_enable(II_HBLANK);
+    irq_enable(II_VCOUNT);
+    REG_DISPSTAT = DSTAT_VBL_IRQ;
 
     int frame = 0;
+
+    for (int i = 0; i < 80; i++) {
+        dma_data.affines[i] = (BgAffineDest){256, 0, 0, 256, 1024, 1024};
+    }
     
     while (1)
     {
         VBlankIntrWait();
+        
 
         s32 sr = sine_table[frame&1023];
         s32 cr = sine_table[(frame+256)&1023];
@@ -85,6 +133,11 @@ int main() {
         REG_BG2PD = cr >> 7;
         REG_BG2X = ((-px * cr - py * sr) >> 7) + (64 << 8);
         REG_BG2Y = ((px * sr - py * cr) >> 7) + (64 << 8);
+
+        dma_data.affines[0].dx = frame << 8;
+        dma_data.affines[1].dx = -frame << 8;
+        dma_data.affines[2].dy = frame << 8;
+        dma_data.affines[3].dy = -frame << 8;
 
         pal_bg_mem[0]=0xffff;
         mmFrame();
