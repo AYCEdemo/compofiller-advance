@@ -25,7 +25,6 @@ extern u8 soundbank[];
 extern s16 sine_table[1024];
 
 Letter letters[32];
-uint tick = 0;
 
 void vbi() {
     mmVBlank();
@@ -66,7 +65,7 @@ int main() {
     mmInit(&mm_setup);
     mmStart(MOD_WILLOWS, MM_PLAY_LOOP);
 
-    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_2D;
 
     init_letters(letters);
 
@@ -97,7 +96,7 @@ int main() {
         uint j = 0;
         for (int i = 0; i < NUM_LETTERS; i++)
         {
-            update_letter(&letters[i], tick, j * 3 << 6);
+            update_letter(&letters[i], frame * 4, j * 64);
             j++;
         }
         render_letters();

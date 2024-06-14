@@ -8,12 +8,18 @@
 #include "tonc_math.h"
 #include "lap.h"
 
+#define MAX_SCALE 256
+#define MID_SCALE 384
+#define MIN_SCALE 512
+
 OBJ_ATTR obj_buffer[128];
 OBJ_AFFINE *obj_aff_buffer = (OBJ_AFFINE*)obj_buffer;
 u32 pb = 0;
 vec2_t origin = VEC2(120 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 //Word debug_onscreen_word;
 WordSent debug_sent;
+
+extern s16 sine_table[1024];
 
 typedef struct Debug_Letter_Sent {
     int sent;
@@ -35,18 +41,10 @@ Letter* init_letters(Letter* letters)
 
     for (int i = 0; i < NUM_LETTERS; i++)
     {
-        letters[i] = (Letter){i, origin, 1, &obj_buffer[i], FALSE};
-        // obj_set_attr(letters[i].oam,
-        //     ATTR0_SQUARE | ATTR0_AFF,
-        //     ATTR1_SIZE_32 | ATTR1_AFF_ID(i),
-        //     ATTR2_PALBANK(6) | tileOffset(i));
-        // obj_aff_identity(&obj_aff_buffer[i]);
+        // 44 << 4 : good midsize
+        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], FALSE};
     }
-    // oam_copy(oam_mem, obj_buffer, NUM_LETTERS);
-    // set_word_pos(letters, "AYCE");
-    //debug_set_word_pos(letters);
     debug_set_word_pos(letters);
-    //obj_set_pos(letters[0].oam, 96, 32);            
 }
 
 
@@ -63,7 +61,6 @@ int debug_map_char_to_int(const char c) {
     if (c == 63) return 37;
     return -1;
 }
-
 
 // void set_word_pos(Letter* letters, int* word) {
 //     int num = strlen(word);
@@ -91,7 +88,7 @@ int add_letter(Letter* letters, int letter, vec2_t startingPos) {
         letters[i].curr_pos = startingPos;
         letters[i].on_screen = TRUE;
         obj_set_attr(letters[i].oam,
-            ATTR0_SQUARE | ATTR0_AFF,
+            ATTR0_SQUARE | ATTR0_AFF_DBL,
             ATTR1_SIZE_32 | ATTR1_AFF_ID(i),
             ATTR2_PALBANK(6) | tileOffset(letter));
         obj_aff_identity(&obj_aff_buffer[i]);
@@ -105,25 +102,35 @@ void update_letter(Letter *letter, uint tick, uint pos) {
     if (letter == NULL) return;
     if (!letter->on_screen) return;
 
-    // int32_t x = comp_to_int(letter->curr_pos.x);
-    // int32_t y = comp_to_int(letter->curr_pos.y);
+    int32_t x = comp_to_int(letter->curr_pos.x);
+    int32_t y = comp_to_int(letter->curr_pos.y);
 
-    // // if (x < -16 || x > 240 || y < -16 || y > 160)
-    // // {
-    // //     //kill_letter(letter);
-    // //     return;
-    // // }
-    
-    if (is_comp_neg(SCALAR(1), 16)) letter->curr_pos.y = SCALAR(10);
-    else letter->curr_pos.y = SCALAR(90);
+    if (x < -32)
+    {
+        kill_letter(letter);
+        return;
+    }
 
-    // if (is_comp_neg(sin, 0)) letter->curr_pos.y -= sin;
-    // else letter->curr_pos.y += sin;
-    // letter->curr_pos.y += (lu_sin((tick + pos) * 64) * 32) << 4 * 32;
-    // letter->curr_pos = add_vec2(letter->curr_pos, VEC2(0, lu_sin(tick)));
+    int32_t sine = sine_table[(tick + pos)&1023] / 2;
+    letter->curr_pos.y += sine;
+
+    letter->scale = ((sine_table[((tick) - pos)&1023]) >> 8) + MID_SCALE;
+    obj_aff_rotscale(&obj_aff_buffer[letter->id], letter->scale, letter->scale, 0);
     obj_set_pos(letter->oam, comp_to_int(letter->curr_pos.x), comp_to_int(letter->curr_pos.y));            
+}
+
+void kill_letter(Letter* letter) {
+    letter->on_screen = FALSE;
+    memset32(letter->oam, 0, 2);
+    obj_set_pos(letter->oam, 0, 160); //off screen
 }
 
 void render_letters() {
     oam_copy(oam_mem, obj_buffer, NUM_LETTERS);
 }
+
+
+// cool effect that will make you extremely nauseated
+    // letter->scale += (sine_table[((tick / 4) - pos)&1023] / 4) >> 12; 
+    // if (letter->scale > MAX_SCALE) letter->scale = MAX_SCALE;
+    // else if (letter->scale < MAX_SCALE) letter->scale = MIN_SCALE;
