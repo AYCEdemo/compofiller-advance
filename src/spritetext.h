@@ -15,6 +15,7 @@ typedef struct Letter {
     FIXED scale;
     OBJ_ATTR *oam;
     int on_screen;
+    int front_letter;
 } Letter;
 
 typedef struct Word {
@@ -32,7 +33,6 @@ inline u32 tileOffset(int i) { return ((i % 8) * 4) + ((i / 8) * 128); }
 Letter* init_letters(Letter* letters);
 int add_letter(Letter* letters, int letter, vec2_t startingPos);
 void kill_letter(Letter *letter);
-void queue_word(char* word);
 void update_letter(Letter *letter, uint tick, uint pos);
 void render_letters();
 

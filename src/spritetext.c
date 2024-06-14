@@ -15,19 +15,12 @@
 OBJ_ATTR obj_buffer[128];
 OBJ_AFFINE *obj_aff_buffer = (OBJ_AFFINE*)obj_buffer;
 u32 pb = 0;
-vec2_t origin = VEC2(120 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
-//Word debug_onscreen_word;
-WordSent debug_sent;
+
+vec2_t origin = VEC2(16 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
+// vec2_t origin = VEC2(120 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 
 extern s16 sine_table[1024];
-
-typedef struct Debug_Letter_Sent {
-    int sent;
-    vec2_t vec;
-    int l;
-} Debug_Letter_Sent;
-
-Debug_Letter_Sent debug_sent2;
+char* debug_text_scroller = "HELLO WORLD THIS IS AYCE WHAT IS UP? THE QUICK BROWN FOX! JUMPED OVER THE LAZY DOG. 1234567890";
 
 // void set_word_pos(Letter*, int*);
 void debug_set_word_pos(Letter*);
@@ -41,47 +34,30 @@ Letter* init_letters(Letter* letters)
 
     for (int i = 0; i < NUM_LETTERS; i++)
     {
-        // 44 << 4 : good midsize
-        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], FALSE};
+        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], FALSE, i == 0};
     }
-    debug_set_word_pos(letters);
-}
-
-
-void queue_word(char* word) 
-{
-    int num = strlen(word);
-
 }
 
 int debug_map_char_to_int(const char c) {
     if (c >= 65 && c <= 90) return c - 65;
     if (c >= 48 && c <= 56) return c - 20;
+    if (c == 32) return 0;
     if (c == 33) return 36;
     if (c == 63) return 37;
     return -1;
 }
 
-// void set_word_pos(Letter* letters, int* word) {
-//     int num = strlen(word);
-//     int inds[num];
-//     for (int i; i < num; i++)
-//         inds[i] = add_letter(letters, debug_map_char_to_int(word[i]));
-//     debug_onscreen_word = (Word) { word, inds };
-
-//     debug_sent = (WordSent) { 999, debug_onscreen_word};
-// }
-
 void debug_set_word_pos(Letter* letters) {
-    int inds2[4] = { 0, 1, 2, 3 };
-    int inds[4];
-    inds[0] = add_letter(letters, debug_map_char_to_int('A'), origin);
-    inds[1] = add_letter(letters, debug_map_char_to_int('Y'), add_vec2(origin, VEC2(LETTER_SIZE + 1, 0)));
-    inds[2] = add_letter(letters, debug_map_char_to_int('C'), add_vec2(origin, VEC2(LETTER_SIZE * 2 + 1, 0)));
-    inds[3] = add_letter(letters, debug_map_char_to_int('E'), add_vec2(origin, VEC2(LETTER_SIZE * 3 + 1, 0)));
+    char* word = "HELLO TEST";
+    int strl = strlen(word);
+    for (int i = 0; i < strl; i++)
+    {
+        add_letter(letters, debug_map_char_to_int(word[i]), add_vec2(origin, VEC2(LETTER_SIZE * i + 1, 0)));
+    }
 }
 
 int add_letter(Letter* letters, int letter, vec2_t startingPos) {
+    if (letter == 0) return -1;
     for (int i = 0; i < NUM_LETTERS; i++)
     {
         if (letters[i].on_screen) continue;
@@ -113,6 +89,7 @@ void update_letter(Letter *letter, uint tick, uint pos) {
 
     int32_t sine = sine_table[(tick + pos)&1023] / 2;
     letter->curr_pos.y += sine;
+    //letter->curr_pos.x -= SCALAR(1);
 
     letter->scale = ((sine_table[((tick) - pos)&1023]) >> 8) + MID_SCALE;
     obj_aff_rotscale(&obj_aff_buffer[letter->id], letter->scale, letter->scale, 0);
@@ -134,3 +111,20 @@ void render_letters() {
     // letter->scale += (sine_table[((tick / 4) - pos)&1023] / 4) >> 12; 
     // if (letter->scale > MAX_SCALE) letter->scale = MAX_SCALE;
     // else if (letter->scale < MAX_SCALE) letter->scale = MIN_SCALE;
+
+
+// read from ROM location
+// text packed in format from old scroller, but simplified
+// extra character for HOLD
+
+// 0 - empty
+// 1-26 - A-Z
+// 27-37 - 0-9
+// 38 - !
+// 39 - ?
+// 40 - .
+// 41 - HOLD
+
+// if HOLD, next 2-bytes is hold time (frames) 65535 frames (1k seconds)
+
+// letters can be ~10 (8 max on screen at once, with some clipping)
