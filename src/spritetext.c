@@ -17,14 +17,26 @@ OBJ_AFFINE *obj_aff_buffer = (OBJ_AFFINE*)obj_buffer;
 u32 pb = 0;
 
 vec2_t origin = VEC2(16 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
+vec2_t side_origin = VEC2(0, 100 - (LETTER_SIZE / 2));
+vec2_t offscreen_origin = VEC2(256, 100 - (LETTER_SIZE / 2));
 // vec2_t origin = VEC2(120 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 
-extern s16 sine_table[1024];
-char* debug_text_scroller = "HELLO WORLD THIS IS AYCE WHAT IS UP? THE QUICK BROWN FOX! JUMPED OVER THE LAZY DOG. 1234567890";
+typedef struct DebugSent {
+    int32_t senti;
+    int val;
+} DebugSent;
+DebugSent senti = { 999, 0 };
 
-// void set_word_pos(Letter*, int*);
+extern s16 sine_table[1024];
+char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE EH? CODE BY NATT AND TFX   GRAPHICS GRACIOUSLY CREATED BY HIIJ   MUSIC SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17 THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
+int debug_text_scroller_len = 0;
+int debug_text_scroller_ind = 0;
+int newWord = FALSE;
+int wordId = 0;
+
 void debug_set_word_pos(Letter*);
 int debug_map_char_to_int(const char c);
+void set_letter_pos(Letter*);
 
 Letter* init_letters(Letter* letters)
 {
@@ -34,76 +46,137 @@ Letter* init_letters(Letter* letters)
 
     for (int i = 0; i < NUM_LETTERS; i++)
     {
-        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], FALSE, i == 0};
+        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], &obj_buffer[i+NUM_LETTERS], FALSE};
     }
+
+    debug_text_scroller_len = strlen(debug_text_scroller);
+    debug_set_word_pos(letters);
 }
 
 int debug_map_char_to_int(const char c) {
     if (c >= 65 && c <= 90) return c - 65;
     if (c >= 48 && c <= 56) return c - 20;
-    if (c == 32) return 0;
+    if (c == 32) return -2;
     if (c == 33) return 36;
     if (c == 63) return 37;
     return -1;
 }
 
 void debug_set_word_pos(Letter* letters) {
-    char* word = "HELLO TEST";
+    char* word = "         ";
+    // char* word = "HELLOWORL";
     int strl = strlen(word);
     for (int i = 0; i < strl; i++)
     {
-        add_letter(letters, debug_map_char_to_int(word[i]), add_vec2(origin, VEC2(LETTER_SIZE * i + 1, 0)));
+        add_letter(letters, debug_map_char_to_int(word[i]), add_vec2(side_origin, VEC2(LETTER_SIZE * i + 1, 0)));
     }
+    debug_text_scroller_ind = 8;
+}
+
+void set_letter_pos(Letter* letter) {
+    obj_set_pos(letter->oam, comp_to_int(letter->curr_pos.x), comp_to_int(letter->curr_pos.y));
+    obj_set_pos(letter->shadow, comp_to_int(letter->curr_pos.x), 110);        
 }
 
 int add_letter(Letter* letters, int letter, vec2_t startingPos) {
-    if (letter == 0) return -1;
     for (int i = 0; i < NUM_LETTERS; i++)
     {
         if (letters[i].on_screen) continue;
-        letters[i].curr_pos = startingPos;
         letters[i].on_screen = TRUE;
+
+        if (letter == -2) newWord = TRUE;
+        else if (newWord) {
+            newWord = FALSE;
+            wordId = !wordId;
+        }
+
+        letters[i].id = wordId;
+        letters[i].curr_pos = startingPos;
+
+        if (letter == -2) return -1;
+        senti.val = letters[i].id;
         obj_set_attr(letters[i].oam,
             ATTR0_SQUARE | ATTR0_AFF_DBL,
-            ATTR1_SIZE_32 | ATTR1_AFF_ID(i),
+            ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
             ATTR2_PALBANK(6) | tileOffset(letter));
-        obj_aff_identity(&obj_aff_buffer[i]);
-        obj_set_pos(letters[i].oam, comp_to_int(letters[i].curr_pos.x), comp_to_int(letters[i].curr_pos.y));            
+        // shadow
+        obj_set_attr(letters[i].shadow,
+            ATTR0_SQUARE | ATTR0_AFF_DBL,
+            ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
+            ATTR2_PALBANK(6) | tileOffset(38));
+
+        set_letter_pos(&letters[i]);    
         return i;
     }
     return -1;
 }
 
-void update_letter(Letter *letter, uint tick, uint pos) {
+// TODO: lazy pass whole array so that we can create next letters
+void update_letter(Letter *letters, Letter *letter, uint tick, uint pos) {
     if (letter == NULL) return;
     if (!letter->on_screen) return;
 
     int32_t x = comp_to_int(letter->curr_pos.x);
-    int32_t y = comp_to_int(letter->curr_pos.y);
 
+    letter->curr_pos.x -= SCALAR(1);
     if (x < -32)
     {
         kill_letter(letter);
         return;
     }
 
-    int32_t sine = sine_table[(tick + pos)&1023] / 2;
-    letter->curr_pos.y += sine;
-    //letter->curr_pos.x -= SCALAR(1);
-
-    letter->scale = ((sine_table[((tick) - pos)&1023]) >> 8) + MID_SCALE;
-    obj_aff_rotscale(&obj_aff_buffer[letter->id], letter->scale, letter->scale, 0);
-    obj_set_pos(letter->oam, comp_to_int(letter->curr_pos.x), comp_to_int(letter->curr_pos.y));            
+    letter->curr_pos.y += sine_table[(tick + x)&1023] / 6;
+    if (letter->curr_pos.y > SCALAR(100)) letter->curr_pos.y = SCALAR(100);
+    set_letter_pos(letter);
 }
 
+void update_scale(int tick) {
+    int32_t sine = ((sine_table[((tick))&1023]) >> 8) + MID_SCALE;
+    int32_t sine2 = ((sine_table[((tick + 512))&1023]) >> 8) + MID_SCALE;
+    obj_aff_rotscale(&obj_aff_buffer[0], sine, sine, 0);
+    obj_aff_rotscale(&obj_aff_buffer[1], sine2, sine2, 0);
+}
+
+// TODO: lazy pass whole array so that we can create next letters
 void kill_letter(Letter* letter) {
-    letter->on_screen = FALSE;
-    memset32(letter->oam, 0, 2);
-    obj_set_pos(letter->oam, 0, 160); //off screen
+    int nextLetter = debug_map_char_to_int(debug_text_scroller[debug_text_scroller_ind]);
+    debug_text_scroller_ind++;
+    if (debug_text_scroller_ind > debug_text_scroller_len)
+        debug_text_scroller_ind = 0;
+
+    if (nextLetter == -2) newWord = TRUE;
+    else if (newWord) {
+        newWord = FALSE;
+        wordId = !wordId;
+    }
+
+    letter->id = wordId;
+    letter->curr_pos = offscreen_origin;
+
+    if (nextLetter == -2) 
+    {
+        memset32(letter->oam, 0, 2);
+        memset32(letter->shadow, 0, 2);
+        obj_set_pos(letter->oam, 0, 160); //off screen
+        obj_set_pos(letter->shadow, 0, 160);
+        return;   
+    }
+    obj_set_attr(letter->oam,
+        ATTR0_SQUARE | ATTR0_AFF_DBL,
+        ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
+        ATTR2_PALBANK(6) | tileOffset(nextLetter));
+    // shadow
+    obj_set_attr(letter->shadow,
+        ATTR0_SQUARE | ATTR0_AFF_DBL,
+        ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
+        ATTR2_PALBANK(6) | tileOffset(38));
+
+    set_letter_pos(letter);
 }
 
-void render_letters() {
-    oam_copy(oam_mem, obj_buffer, NUM_LETTERS);
+void render_letters(int tick) {
+    update_scale(tick);
+    oam_copy(oam_mem, obj_buffer, NUM_LETTERS*2);
 }
 
 

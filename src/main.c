@@ -126,7 +126,6 @@ int main() {
     while (1)
     {
         VBlankIntrWait();
-        
 
         s32 sr = sine_table[frame&1023];
         s32 cr = sine_table[(frame+256)&1023];
@@ -150,10 +149,10 @@ int main() {
         uint j = 0;
         for (int i = 0; i < NUM_LETTERS; i++)
         {
-            update_letter(&letters[i], frame * 4, j * 64);
+            update_letter(letters, &letters[i], frame, j * 64);
             j++;
         }
-        render_letters();
+        render_letters(frame * 4);
 
         frame++;
     }
