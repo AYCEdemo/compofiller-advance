@@ -28,7 +28,7 @@ typedef struct DebugSent {
 DebugSent senti = { 999, 0 };
 
 extern s16 sine_table[1024];
-char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE EH? CODE BY NATT AND TFX   GRAPHICS GRACIOUSLY CREATED BY HIIJ   MUSIC SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17 THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
+char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? CODE: NATT AND TFX   GRAPHICS: GRACIOUSLY CREATED BY HIIJ   MUSIC: SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17. THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
 int debug_text_scroller_len = 0;
 int debug_text_scroller_ind = 0;
 int newWord = FALSE;
@@ -59,6 +59,10 @@ int debug_map_char_to_int(const char c) {
     if (c == 32) return -2;
     if (c == 33) return 36;
     if (c == 63) return 37;
+    if (c == 46) return 40;
+    if (c == 44) return 41;
+    if (c == 58) return 42;
+    if (c == 59) return 43;
     return -1;
 }
 
