@@ -27,6 +27,11 @@ DebugSent senti = { 999, 0 };
 
 extern s16 sine_table[1024];
 extern u32 font[];
+extern u8 sprites_data[];
+extern u32 sprites_data_size;
+extern u8 sprites_palette[];
+extern u32 sprites_palette_size;
+
 char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? CODE: NATT AND TFX   GRAPHICS: GRACIOUSLY CREATED BY HIIJ   MUSIC: SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17. THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
 int debug_text_scroller_len = 0;
 int debug_text_scroller_ind = 0;
@@ -39,8 +44,8 @@ void set_letter_pos(Letter*);
 
 Letter* init_letters(Letter* letters)
 {
-    memcpy32(&tile_mem[4], ayceFontSheetTiles, ayceFontSheetTilesLen/4);
-    memcpy32(pal_obj_mem, ayceFontSheetPal, ayceFontSheetPalLen/4);
+    memcpy32(&tile_mem[4], sprites_data, sprites_data_size);
+    memcpy32(pal_obj_mem, sprites_palette, sprites_palette_size);
     oam_init(obj_buffer, 128);
 
     for (int i = 0; i < NUM_LETTERS; i++)
