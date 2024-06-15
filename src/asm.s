@@ -1,4 +1,51 @@
 
+    .syntax unified
+    
+    .section .iwram, "ax", %progbits
+    .arm
+
+    .global inv_scalar
+    .type inv_scalar STT_FUNC
+inv_scalar:
+    @ r0 = 1 / r0
+    push    {r1-r4}
+    movs    r4, r0
+    negpl   r0, r0
+    @ here we have to divide 0x100000000 by r0
+    mov     r1, 1
+    mov     r3, 8
+1:
+    .rept 4
+        adds    r1, r0, r1, lsl 1
+        subcc   r1, r1, r0
+        adcs    r2, r2, r2  @ = rol 1
+    .endr
+    subs    r3, r3, 1
+    bne     1b
+    mov     r0, r2
+    movs    r4, r4
+    negmi   r0, r0
+    pop     {r1-r4}
+    bx      lr
+
+    .global mul_vec2
+    .type mul_vec2 STT_FUNC
+mul_vec2:
+    @ [r0] = [r0] * r1
+    push    {r2-r5}
+    ldm     r0, {r2, r4}
+    smull   r2, r3, r1, r2
+    lsl     r3, r3, 16
+    orr     r3, r3, r2, lsr 16
+    smull   r4, r5, r1, r4
+    lsl     r5, r5, 16
+    orr     r5, r5, r4, lsr 16
+    stm     r0, {r3, r5}
+    pop     {r2-r5}
+    bx      lr
+
+    .section .text
+
     .global soundbank
 soundbank: .incbin "res/sound.bin"
 
