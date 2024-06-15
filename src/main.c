@@ -36,13 +36,10 @@ u16 cur_grad = 0;
 extern u8 soundbank[];
 extern s16 sine_table[1024];
 
-<<<<<<< HEAD
 Letter letters[32];
-=======
 s32 inv_scalar(const s32 x);
 s32 mul_vec2(s32* a, const s32 b);
 // void render_floor(BgAffineDest* affines, s32 pitch, s32 yaw, u32 lines);
->>>>>>> 6c761a7cbc168ad27e01e82cde8c4ce0b725bf31
 
 void vbi() {
     mmVBlank();
