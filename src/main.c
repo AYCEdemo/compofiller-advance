@@ -104,7 +104,7 @@ int main() {
     memcpy32((void*)MEM_VRAM, vram_buf, VRAM_BG_SIZE/4);
     memcpy32((void*)MEM_VRAM_OBJ, sprites_data, sprites_data_size/4);
     memcpy16((void*)(MEM_PAL+128*2), wheel_palette, wheel_palette_size/2);
-    // memcpy16((void*)MEM_PAL_OBJ, sprites_palette, sprites_palette_size/2); this crashes idk why
+    memcpy16((void*)MEM_PAL_OBJ, sprites_palette, sprites_palette_size/2);
     free(vram_buf);
 
     txt_bup_1toX((void*)(MEM_VRAM+16384), toncfontTiles, toncfontTilesLen, 8, 0);

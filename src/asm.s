@@ -46,9 +46,6 @@ mul_vec2:
 
     .section .text
 
-    .global soundbank
-soundbank: .incbin "res/sound.bin"
-
     .global sine_table
     @ sin((x + 0.5) * pi / 512) * 32768
 sine_table:
@@ -119,19 +116,28 @@ sine_table:
 
     .global wheel_data, wheel_data_size
 wheel_data:             .incbin "res/wheel.bin"
+    .align 2
 wheel_data_size:        .word (.)-wheel_data
 
     .global wheel_map
 wheel_map:              .incbin "res/wheel_map.bin"
+    .align 2
 
     .global wheel_palette, wheel_palette_size
 wheel_palette:          .incbin "res/wheel_pal.bin"
+    .align 2
 wheel_palette_size:     .word (.)-wheel_palette
 
     .global sprites_data, sprites_data_size
 sprites_data:           .incbin "res/sprites.bin"
+    .align 2
 sprites_data_size:      .word (.)-sprites_data
 
     .global sprites_palette, sprites_palette_size
 sprites_palette:        .incbin "res/sprites_pal.bin"
+    .align 2
 sprites_palette_size:   .word (.)-sprites_palette
+
+    .global soundbank
+soundbank: .incbin "res/sound.bin"
+    .align 2
