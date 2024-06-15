@@ -13,6 +13,7 @@
 
 #define MM_CHS   8
 #define MAX_GRAD 31
+#define TILT     (1 << 10)
 
 typedef struct {
     u8 mod[MM_SIZEOF_MODCH*MM_CHS];
@@ -28,15 +29,20 @@ struct {
     u32 stat;
     u16 bgcnt[4];
     u16 bgofs[4][2];
-    BgAffineDest affines[80];
+    BgAffineDest affines[79];
 } dma_data;
 u16 cur_grad = 0;
-
 
 extern u8 soundbank[];
 extern s16 sine_table[1024];
 
+<<<<<<< HEAD
 Letter letters[32];
+=======
+s32 inv_scalar(const s32 x);
+s32 mul_vec2(s32* a, const s32 b);
+// void render_floor(BgAffineDest* affines, s32 pitch, s32 yaw, u32 lines);
+>>>>>>> 6c761a7cbc168ad27e01e82cde8c4ce0b725bf31
 
 void vbi() {
     mmVBlank();
@@ -76,6 +82,7 @@ int main() {
     REG_DISPCNT = DCNT_BLANK;
     REG_DISPSTAT = 0;
     REG_BLDCNT = BLD_BG0 | BLD_BG1 | BLD_BG2 | BLD_BLACK;
+    memset32(&dma_data, 0, sizeof(dma_data)/4);
     dma_data.cnt = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_2D;
     dma_data.stat = DSTAT_VBL_IRQ | DSTAT_HBL_IRQ;
     dma_data.bgcnt[0] = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
@@ -118,17 +125,25 @@ int main() {
     REG_DISPSTAT = DSTAT_VBL_IRQ;
 
     int frame = 0;
-
-    for (int i = 0; i < 80; i++) {
-        dma_data.affines[i] = (BgAffineDest){256, 0, 0, 256, 1024, 1024};
-    }
+    s32 nsr = 0;
+    s32 ncr = 0;
+    s32 sr = 0;
+    s32 cr = 0;
     
     while (1)
     {
         VBlankIntrWait();
 
-        s32 sr = sine_table[frame&1023];
-        s32 cr = sine_table[(frame+256)&1023];
+        if ((frame & 1) == 1) {
+            sr = (sr + nsr) / 2;
+            cr = (cr + ncr) / 2;
+        } else {
+            sr = nsr;
+            cr = ncr;
+            nsr = sine_table[(frame/2)&1023];
+            ncr = sine_table[(frame/2+256)&1023];
+        }
+
         s32 px = 120;
         s32 py = 40;
         REG_BG2PA = cr >> 7;
@@ -138,10 +153,23 @@ int main() {
         REG_BG2X = ((-px * cr - py * sr) >> 7) + (64 << 8);
         REG_BG2Y = ((px * sr - py * cr) >> 7) + (64 << 8);
 
-        dma_data.affines[0].dx = frame << 8;
-        dma_data.affines[1].dx = -frame << 8;
-        dma_data.affines[2].dy = frame << 8;
-        dma_data.affines[3].dy = -frame << 8;
+        s32 sf = sine_table[frame&1023];
+        s32 cf = sine_table[(frame+256)&1023];
+        s32 ps = (1 << 16) - TILT * 39;
+        for (int i = 0; i < 79; i++) {
+            s32 ips = inv_scalar(ps);
+            s32 sc[2] = {sf, cf};
+            mul_vec2(sc, ips);
+            s32 pa = -sc[1];
+            s32 pb = sc[0];
+            s32 pc = sc[0];
+            s32 pd = sc[1];
+            dma_data.affines[i].pa = pa >> 7;
+            dma_data.affines[i].pc = pc >> 7;
+            dma_data.affines[i].dx = ((64 << 15) - (120 * pa + (i - 39) * pb)) >> 7;
+            dma_data.affines[i].dy = ((64 << 15) - (120 * pc + (i - 39) * pd)) >> 7;
+            ps += TILT;
+        }
 
         pal_bg_mem[0]=0xffff;
         mmFrame();
