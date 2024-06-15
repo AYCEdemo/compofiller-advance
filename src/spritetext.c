@@ -1,6 +1,5 @@
 #include <string.h>
 #include "spritetext.h"
-#include "../res/ayceFontSheet.h"
 #include "tonc_oam.h"
 #include "tonc_types.h"
 #include "tonc_memdef.h"
@@ -27,6 +26,7 @@ typedef struct DebugSent {
 DebugSent senti = { 999, 0 };
 
 extern s16 sine_table[1024];
+extern u32 font[];
 char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? CODE: NATT AND TFX   GRAPHICS: GRACIOUSLY CREATED BY HIIJ   MUSIC: SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17. THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
 int debug_text_scroller_len = 0;
 int debug_text_scroller_ind = 0;

@@ -47,10 +47,10 @@ mul_vec2:
     .section .text
 
     .global soundbank
-soundbank: .incbin "../res/sound.bin"
+soundbank: .incbin "res/sound.bin"
 
     .global font
-font: .incbin "../res/ayceFontSheet.s"
+font: .incbin "res/ayceFontSheet.bin"
 
     .global sine_table
     @ sin((x + 0.5) * pi / 512) * 32768
