@@ -116,3 +116,22 @@ sine_table:
     .short  -9416, -9224, -9030, -8837, -8643, -8449, -8255, -8060, -7865, -7670, -7474, -7278, -7082, -6885, -6689, -6492
     .short  -6295, -6097, -5899, -5702, -5504, -5305, -5107, -4908, -4709, -4510, -4311, -4111, -3912, -3712, -3512, -3312
     .short  -3112, -2912, -2712, -2511, -2311, -2110, -1910, -1709, -1508, -1307, -1106,  -905,  -704,  -503,  -302,  -101
+
+    .global wheel_data, wheel_data_size
+wheel_data:             .incbin "res/wheel.bin"
+wheel_data_size:        .word (.)-wheel_data
+
+    .global wheel_map
+wheel_map:              .incbin "res/wheel_map.bin"
+
+    .global wheel_palette, wheel_palette_size
+wheel_palette:          .incbin "res/wheel_pal.bin"
+wheel_palette_size:     .word (.)-wheel_palette
+
+    .global sprites_data, sprites_data_size
+sprites_data:           .incbin "res/sprites.bin"
+sprites_data_size:      .word (.)-sprites_data
+
+    .global sprites_palette, sprites_palette_size
+sprites_palette:        .incbin "res/sprites_pal.bin"
+sprites_palette_size:   .word (.)-sprites_palette

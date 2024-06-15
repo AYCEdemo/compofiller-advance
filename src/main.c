@@ -9,7 +9,7 @@
 
 #include "res/sound.h"
 
-#define MM_CHS   6
+#define MM_CHS   8
 #define MAX_GRAD 31
 #define TILT     (1 << 10)
 
@@ -33,6 +33,15 @@ u16 cur_grad = 0;
 
 extern u8 soundbank[];
 extern s16 sine_table[1024];
+extern u8 wheel_data[];
+extern u32 wheel_data_size;
+extern u8 wheel_map[];
+extern u8 wheel_palette[];
+extern u32 wheel_palette_size;
+extern u8 sprites_data[];
+extern u32 sprites_data_size;
+extern u8 sprites_palette[];
+extern u32 sprites_palette_size;
 
 s32 inv_scalar(const s32 x);
 s32 mul_vec2(s32* a, const s32 b);
@@ -40,7 +49,7 @@ s32 mul_vec2(s32* a, const s32 b);
 
 void vbi() {
     mmVBlank();
-    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
     REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(80);
     REG_BG0CNT = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
     REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
@@ -77,18 +86,32 @@ int main() {
     REG_DISPSTAT = 0;
     REG_BLDCNT = BLD_BG0 | BLD_BG1 | BLD_BG2 | BLD_BLACK;
     memset32(&dma_data, 0, sizeof(dma_data)/4);
-    dma_data.cnt = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+    dma_data.cnt = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
     dma_data.stat = DSTAT_VBL_IRQ | DSTAT_HBL_IRQ;
     dma_data.bgcnt[0] = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
     dma_data.bgcnt[1] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
-    dma_data.bgcnt[2] = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16 | BG_WRAP;
+    dma_data.bgcnt[2] = BG_CBB(1) | BG_SBB( 8) | BG_AFF_16x16 | BG_WRAP;
 
-    txt_bup_1toX((void*)(MEM_VRAM), toncfontTiles, toncfontTilesLen, 8, 0);
+    // prepare graphics
+    // grit couldn't bake offsets for some reason so we have to manually patch it
+    u8* vram_buf = malloc(VRAM_BG_SIZE);
+    for (int i = 0; i < 256; i++) {
+        vram_buf[i] = wheel_map[i] + 4;
+    }
+    for (int i = 0; i < wheel_data_size; i++) {
+        vram_buf[i+256] = (wheel_data[i] == 0) ? 0 : wheel_data[i] + 128;
+    }
+    memcpy32((void*)MEM_VRAM, vram_buf, VRAM_BG_SIZE/4);
+    memcpy32((void*)MEM_VRAM_OBJ, sprites_data, sprites_data_size/4);
+    memcpy16((void*)(MEM_PAL+128*2), wheel_palette, wheel_palette_size/2);
+    // memcpy16((void*)MEM_PAL_OBJ, sprites_palette, sprites_palette_size/2); this crashes idk why
+    free(vram_buf);
+
+    txt_bup_1toX((void*)(MEM_VRAM+16384), toncfontTiles, toncfontTilesLen, 8, 0);
     txt_bup_1toX((void*)(MEM_VRAM+32768), toncfontTiles, toncfontTilesLen, 4, 0);
-    txt_bup_1toX((void*)(MEM_VRAM_OBJ), toncfontTiles, toncfontTilesLen, 4, 0);
 
     for (int i = 0; i < 64*32; i++) {
-        if (i < 128) se_mem[0][i] = ((i * 2 + 1) << 8) | (i * 2);
+        if (i < 128) se_mem[8][i] = ((i * 2 + 1) << 8) | (i * 2);
         se_mem[28][i] = (i & 1023);
         se_mem[30][i] = (i & 1023) | SE_HFLIP;
     }
@@ -106,11 +129,12 @@ int main() {
     mmInit(&mm_setup);
     mmStart(MOD_WILLOWS, MM_PLAY_LOOP);
 
+    vid_vsync(); // just to be safe, i'm sure irq_enable() also sets STAT
+    REG_IF = -1;
     irq_init(NULL);
     irq_add(II_VBLANK, &vbi);
     irq_add(II_HBLANK, &hbi);
     irq_add(II_VCOUNT, &vci);
-    vid_vsync(); // just to be safe, i'm sure irq_enable() also sets STAT
     irq_enable(II_VBLANK);
     irq_enable(II_HBLANK);
     irq_enable(II_VCOUNT);

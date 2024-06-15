@@ -43,14 +43,23 @@ mm_add_soundbank_target(soundbank
     HEADER ${CMAKE_CURRENT_BINARY_DIR}/res/sound.h
     INPUTS res/willows.it
 )
-grit_add_binary_target(pixcat res/pixcat.png BITMAP
-    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/pixcat.bin
+grit_add_binary_target(img_wheel res/wheel.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/wheel.bin
+    OUTPUT_MAP ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_map.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_pal.bin
+    DEPTH 8
+    OPTIONS -mLa -mRa -pS
+)
+grit_add_binary_target(img_sprites res/sprites.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/sprites.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/sprites_pal.bin
     DEPTH 4
+    OPTIONS -mR! -pS
 )
 
 add_executable(atparty-2024-demo ${SOURCES})
 
-add_dependencies(atparty-2024-demo soundbank pixcat)
+add_dependencies(atparty-2024-demo soundbank img_wheel img_sprites)
 
 target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
 target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})
