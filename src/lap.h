@@ -43,7 +43,6 @@ static inline int is_comp_neg(int32_t a, int fp) {
 
 void mul_mat2x2_1xn(mat22_t *d, const mat22_t *a, const mat22_t *b, uint32_t n);
 void mul_mat2x2_vec2_1xn(vec2_t *d, const mat22_t *a, const vec2_t *b, uint32_t n);
-uint32_t inv_scalar(const uint32_t x);
 void inv_mat2x2(mat22_t *d, const mat22_t *s);
 
 #endif
