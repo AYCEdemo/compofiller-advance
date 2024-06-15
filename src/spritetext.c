@@ -8,13 +8,12 @@
 #include "tonc_math.h"
 #include "lap.h"
 
-#define MAX_SCALE 256
-#define MID_SCALE 384
-#define MIN_SCALE 512
+#define MIN_SCALE 448
+#define MID_SCALE 256
+#define MAX_SCALE 196
 
 OBJ_ATTR obj_buffer[128];
 OBJ_AFFINE *obj_aff_buffer = (OBJ_AFFINE*)obj_buffer;
-u32 pb = 0;
 
 vec2_t origin = VEC2(16 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 vec2_t side_origin = VEC2(0, 100 - (LETTER_SIZE / 2));
@@ -46,7 +45,8 @@ Letter* init_letters(Letter* letters)
 
     for (int i = 0; i < NUM_LETTERS; i++)
     {
-        letters[i] = (Letter){i, origin, 24 << 4, &obj_buffer[i], &obj_buffer[i+NUM_LETTERS], FALSE};
+        letters[i] = (Letter){i, origin, MID_SCALE, &obj_buffer[i], &obj_buffer[i+NUM_LETTERS], FALSE};
+        obj_aff_identity(&obj_aff_buffer[i]);
     }
 
     debug_text_scroller_len = strlen(debug_text_scroller);
@@ -94,7 +94,7 @@ int add_letter(Letter* letters, int letter, vec2_t startingPos) {
             wordId = !wordId;
         }
 
-        letters[i].id = wordId;
+        //letters[i].id = wordId;
         letters[i].curr_pos = startingPos;
 
         if (letter == -2) return -1;
@@ -130,15 +130,17 @@ void update_letter(Letter *letters, Letter *letter, uint tick, uint pos) {
     }
 
     letter->curr_pos.y += sine_table[(tick + x)&1023] / 6;
+
+    // how in the fuck do I clamp this shit
+    letter->scale = (sine_table[(tick + x * 4)&1023] >> 8) + MID_SCALE;
+    if (letter->scale > MIN_SCALE) letter->scale = MIN_SCALE;
+    else if (letter->scale < MAX_SCALE) letter->scale = MAX_SCALE;
+    obj_aff_rotscale(&obj_aff_buffer[letter->id], letter->scale, letter->scale, 0);
     if (letter->curr_pos.y > SCALAR(100)) letter->curr_pos.y = SCALAR(100);
     set_letter_pos(letter);
 }
 
 void update_scale(int tick) {
-    int32_t sine = ((sine_table[((tick))&1023]) >> 8) + MID_SCALE;
-    int32_t sine2 = ((sine_table[((tick + 512))&1023]) >> 8) + MID_SCALE;
-    obj_aff_rotscale(&obj_aff_buffer[0], sine, sine, 0);
-    obj_aff_rotscale(&obj_aff_buffer[1], sine2, sine2, 0);
 }
 
 // TODO: lazy pass whole array so that we can create next letters
@@ -154,14 +156,14 @@ void kill_letter(Letter* letter) {
         wordId = !wordId;
     }
 
-    letter->id = wordId;
+    //letter->id = wordId;
     letter->curr_pos = offscreen_origin;
 
     if (nextLetter == -2) 
     {
         memset32(letter->oam, 0, 2);
         memset32(letter->shadow, 0, 2);
-        obj_set_pos(letter->oam, 0, 160); //off screen
+        obj_set_pos(letter->oam, 0, 160); //off screen=
         obj_set_pos(letter->shadow, 0, 160);
         return;   
     }
@@ -180,7 +182,7 @@ void kill_letter(Letter* letter) {
 
 void render_letters(int tick) {
     update_scale(tick);
-    oam_copy(oam_mem, obj_buffer, NUM_LETTERS*2);
+    oam_copy(oam_mem, obj_buffer, 128);
 }
 
 
