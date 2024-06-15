@@ -41,7 +41,7 @@ list(APPEND SOURCES ${GENERATED_RES})
 mm_add_soundbank_target(soundbank
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/res/sound.bin
     HEADER ${CMAKE_CURRENT_BINARY_DIR}/res/sound.h
-    INPUTS res/willows.mod
+    INPUTS res/willows.it
 )
 grit_add_binary_target(pixcat res/pixcat.png BITMAP
     OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/pixcat.bin

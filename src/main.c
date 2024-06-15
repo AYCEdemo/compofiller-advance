@@ -9,7 +9,7 @@
 
 #include "res/sound.h"
 
-#define MM_CHS   8
+#define MM_CHS   6
 #define MAX_GRAD 31
 #define TILT     (1 << 10)
 
