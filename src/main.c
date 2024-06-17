@@ -32,6 +32,8 @@ struct {
     BgAffineDest affines[79];
 } dma_data;
 u16 cur_grad = 0;
+Letter letters[32];
+u16* sky_data_buf;
 
 extern u8 soundbank[];
 extern s16 sine_table[1024];
@@ -44,36 +46,41 @@ extern u8 font_data[];
 extern u32 font_data_size;
 extern u8 font_palette[];
 extern u32 font_palette_size;
+extern u16 sky_data[];
 
-Letter letters[32];
 s32 inv_scalar(const s32 x);
 s32 mul_vec2(s32* a, const s32 b);
 
 void vbi() {
     mmVBlank();
     REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
-    REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(80);
+    REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(81);
     REG_BG0CNT = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
     REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
     REG_BG2CNT = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16;
-    REG_DMA0CNT = 0;
+    REG_DMA[0].cnt = 0;
+    REG_DMA[0].src = sky_data_buf;
+    REG_DMA[0].dst = pal_bg_mem;
+    REG_DMA[0].cnt = DMA_COUNT(1) | DMA_SRC_INC | DMA_DST_RELOAD | DMA_AT_HBLANK | DMA_REPEAT | DMA_16NOW;
+    pal_bg_mem[0] = sky_data[0];
     cur_grad = MAX_GRAD - 1;
 }
 
 void vci() {
     REG_BLDY = MAX_GRAD;
     REG_DISPSTAT = (u16)dma_data.stat; // needed to be written first so the next line can fire right away
-    REG_DMA0SAD = (u32)&dma_data;
-    REG_DMA0DAD = (u32)&REG_DISPCNT;
-    REG_DMA0CNT = DMA_COUNT(12) | DMA_SRC_INC | DMA_DST_INC | DMA_AT_HBLANK | DMA_32NOW;
+    REG_DMA[0].cnt = 0;
+    REG_DMA[0].src = &dma_data;
+    REG_DMA[0].dst = (void*)((u32)&REG_DISPCNT);
+    REG_DMA[0].cnt = DMA_COUNT(12) | DMA_SRC_INC | DMA_DST_INC | DMA_AT_HBLANK | DMA_32NOW;
 }
 
 void hbi() {
     REG_BLDY = cur_grad >> 1;
     if (cur_grad == MAX_GRAD - 1) {
-        REG_DMA0SAD = (u32)(&dma_data.affines[1]);
-        REG_DMA0DAD = (u32)&REG_BG2PA;
-        REG_DMA0CNT = DMA_COUNT(4) | DMA_SRC_INC | DMA_DST_RELOAD | DMA_AT_HBLANK | DMA_REPEAT | DMA_32NOW;
+        REG_DMA[0].src = &dma_data.affines[1];
+        REG_DMA[0].dst = (void*)((u32)&REG_BG2PA);
+        REG_DMA[0].cnt = DMA_COUNT(4) | DMA_SRC_INC | DMA_DST_RELOAD | DMA_AT_HBLANK | DMA_REPEAT | DMA_32NOW;
     }
     else if (cur_grad == 0) {
         REG_DISPSTAT &= ~DSTAT_HBL_IRQ;
@@ -88,6 +95,9 @@ int main() {
     REG_DISPSTAT = 0;
     REG_BLDCNT = BLD_BG0 | BLD_BG1 | BLD_BG2 | BLD_BLACK;
     memset32(&dma_data, 0, sizeof(dma_data)/4);
+    // DMA0 can't read from cart, need to copy to RAM
+    sky_data_buf = malloc(80*2);
+    dma_cpy(sky_data_buf, &sky_data[1], 80, 3, DMA_CPY16);
     dma_data.cnt = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
     dma_data.stat = DSTAT_VBL_IRQ | DSTAT_HBL_IRQ;
     dma_data.bgcnt[0] = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
@@ -117,7 +127,7 @@ int main() {
         se_mem[28][i] = (i & 1023);
         se_mem[30][i] = (i & 1023) | SE_HFLIP;
     }
-    pal_bg_mem[1]=0xffff;
+    pal_bg_mem[1] = 0xffff;
     
     mm_buf_t* mm_buf = (mm_buf_t*)malloc(sizeof(mm_buf_t));
     mm_gba_system mm_setup = {
@@ -134,7 +144,6 @@ int main() {
     init_letters(letters);
 
     vid_vsync(); // just to be safe, i'm sure irq_enable() also sets STAT
-    REG_IF = -1;
     irq_init(NULL);
     irq_add(II_VBLANK, &vbi);
     irq_add(II_HBLANK, &hbi);
@@ -190,9 +199,9 @@ int main() {
             ps += TILT;
         }
 
-        pal_bg_mem[0]=0xffff;
+        pal_bg_mem[0] = 0xffff;
         mmFrame();
-        pal_bg_mem[0]=0;
+        pal_bg_mem[0] = 0;
         uint j = 0;
         for (int i = 0; i < NUM_LETTERS; i++)
         {

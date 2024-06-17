@@ -134,13 +134,17 @@ wheel_palette_size:     .word 1b-wheel_palette
 font_data:              .incbin "res/font.bin"
 1:
     .align 2
-font_data_size:      .word 1b-font_data
+font_data_size:         .word 1b-font_data
 
     .global font_palette, font_palette_size
 font_palette:           .incbin "res/font_pal.bin"
 1:
     .align 2
-font_palette_size:   .word 1b-font_palette
+font_palette_size:      .word 1b-font_palette
+
+    .global sky_data
+sky_data:               .incbin "res/sky.bin"
+    .align 2
 
     .global soundbank
 soundbank: .incbin "res/sound.bin"

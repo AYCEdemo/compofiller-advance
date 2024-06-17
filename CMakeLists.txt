@@ -36,6 +36,7 @@ ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_map.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_pal.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/font.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/font_pal.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
 )
 
 set(GENERATED_RES
@@ -61,10 +62,15 @@ grit_add_binary_target(img_font res/font.png
     DEPTH 4
     OPTIONS -pS
 )
+grit_add_binary_target(img_sky res/sky.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
+    BITMAP NO_PALETTE
+    DEPTH 16
+)
 
 add_executable(atparty-2024-demo ${SOURCES})
 
-add_dependencies(atparty-2024-demo soundbank img_wheel img_font)
+add_dependencies(atparty-2024-demo soundbank img_wheel img_font img_sky)
 
 target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
 target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})
