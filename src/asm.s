@@ -116,8 +116,9 @@ sine_table:
 
     .global wheel_data, wheel_data_size
 wheel_data:             .incbin "res/wheel.bin"
+1:
     .align 2
-wheel_data_size:        .word (.)-wheel_data
+wheel_data_size:        .word 1b-wheel_data
 
     .global wheel_map
 wheel_map:              .incbin "res/wheel_map.bin"
@@ -125,18 +126,21 @@ wheel_map:              .incbin "res/wheel_map.bin"
 
     .global wheel_palette, wheel_palette_size
 wheel_palette:          .incbin "res/wheel_pal.bin"
+1:
     .align 2
-wheel_palette_size:     .word (.)-wheel_palette
+wheel_palette_size:     .word 1b-wheel_palette
 
-    .global sprites_data, sprites_data_size
-sprites_data:           .incbin "res/sprites.bin"
+    .global font_data, font_data_size
+font_data:              .incbin "res/font.bin"
+1:
     .align 2
-sprites_data_size:      .word (.)-sprites_data
+font_data_size:      .word 1b-font_data
 
-    .global sprites_palette, sprites_palette_size
-sprites_palette:        .incbin "res/sprites_pal.bin"
+    .global font_palette, font_palette_size
+font_palette:           .incbin "res/font_pal.bin"
+1:
     .align 2
-sprites_palette_size:   .word (.)-sprites_palette
+font_palette_size:   .word 1b-font_palette
 
     .global soundbank
 soundbank: .incbin "res/sound.bin"

@@ -29,12 +29,10 @@ typedef struct WordSent {
 
 inline u32 tileOffset(int i) { return ((i % 8) * 4) + ((i / 8) * 128); }
 
-Letter* init_letters(Letter* letters);
+void init_letters(Letter* letters);
 int add_letter(Letter* letters, int letter, vec2_t startingPos);
 void kill_letter(Letter *letter);
 void update_letter(Letter *letters, Letter *letter, uint tick, uint pos);
 void render_letters(int tick);
-
-int all_offscreen(Letter* letters);
 
 #endif

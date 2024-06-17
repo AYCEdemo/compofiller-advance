@@ -31,8 +31,11 @@ src/asm.s
 
 ${CMAKE_CURRENT_BINARY_DIR}/res/sound.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/sound.h
-
-${CMAKE_CURRENT_BINARY_DIR}/res/ayceFontSheet.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/wheel.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/wheel_map.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/wheel_pal.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/font.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/font_pal.bin
 )
 
 set(GENERATED_RES
@@ -51,16 +54,17 @@ grit_add_binary_target(img_wheel res/wheel.png
     DEPTH 8
     OPTIONS -mLa -mRa -pS
 )
-grit_add_binary_target(img_sprites res/sprites.png
-    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/sprites.bin
-    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/sprites_pal.bin
+grit_add_binary_target(img_font res/font.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/font.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/font_pal.bin
+    NO_MAP
     DEPTH 4
-    OPTIONS -mR! -pS
+    OPTIONS -pS
 )
 
 add_executable(atparty-2024-demo ${SOURCES})
 
-add_dependencies(atparty-2024-demo soundbank img_wheel img_sprites)
+add_dependencies(atparty-2024-demo soundbank img_wheel img_font)
 
 target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
 target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})

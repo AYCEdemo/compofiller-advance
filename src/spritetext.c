@@ -17,7 +17,6 @@ OBJ_AFFINE *obj_aff_buffer = (OBJ_AFFINE*)obj_buffer;
 vec2_t origin = VEC2(16 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 vec2_t side_origin = VEC2(0, 100 - (LETTER_SIZE / 2));
 vec2_t offscreen_origin = VEC2(256, 100 - (LETTER_SIZE / 2));
-// vec2_t origin = VEC2(120 - (LETTER_SIZE * 2), 80 - (LETTER_SIZE / 2));
 
 typedef struct DebugSent {
     int32_t senti;
@@ -26,11 +25,6 @@ typedef struct DebugSent {
 DebugSent senti = { 999, 0 };
 
 extern s16 sine_table[1024];
-extern u32 font[];
-extern u8 sprites_data[];
-extern u32 sprites_data_size;
-extern u8 sprites_palette[];
-extern u32 sprites_palette_size;
 
 char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? CODE: NATT AND TFX   GRAPHICS: GRACIOUSLY CREATED BY HIIJ   MUSIC: SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17. THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
 int debug_text_scroller_len = 0;
@@ -42,10 +36,8 @@ void debug_set_word_pos(Letter*);
 int debug_map_char_to_int(const char c);
 void set_letter_pos(Letter*);
 
-Letter* init_letters(Letter* letters)
+void init_letters(Letter* letters)
 {
-    memcpy32(&tile_mem[4], sprites_data, sprites_data_size);
-    memcpy32(pal_obj_mem, sprites_palette, sprites_palette_size);
     oam_init(obj_buffer, 128);
 
     for (int i = 0; i < NUM_LETTERS; i++)
@@ -107,12 +99,12 @@ int add_letter(Letter* letters, int letter, vec2_t startingPos) {
         obj_set_attr(letters[i].oam,
             ATTR0_SQUARE | ATTR0_AFF_DBL,
             ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
-            ATTR2_PALBANK(6) | tileOffset(letter));
+            ATTR2_PALBANK(0) | tileOffset(letter));
         // shadow
         obj_set_attr(letters[i].shadow,
             ATTR0_SQUARE | ATTR0_AFF_DBL,
             ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
-            ATTR2_PALBANK(6) | tileOffset(38));
+            ATTR2_PALBANK(0) | tileOffset(38));
 
         set_letter_pos(&letters[i]);    
         return i;
@@ -175,12 +167,12 @@ void kill_letter(Letter* letter) {
     obj_set_attr(letter->oam,
         ATTR0_SQUARE | ATTR0_AFF_DBL,
         ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
-        ATTR2_PALBANK(6) | tileOffset(nextLetter));
+        ATTR2_PALBANK(0) | tileOffset(nextLetter));
     // shadow
     obj_set_attr(letter->shadow,
         ATTR0_SQUARE | ATTR0_AFF_DBL,
         ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
-        ATTR2_PALBANK(6) | tileOffset(38));
+        ATTR2_PALBANK(0) | tileOffset(38));
 
     set_letter_pos(letter);
 }

@@ -7,7 +7,7 @@
 #include "tonc_text.h"
 #include "tonc_video.h"
 
-#include "../res/sound.h"
+#include "res/sound.h"
 
 #include "spritetext.h"
 
@@ -40,15 +40,14 @@ extern u32 wheel_data_size;
 extern u8 wheel_map[];
 extern u8 wheel_palette[];
 extern u32 wheel_palette_size;
-extern u8 sprites_data[];
-extern u32 sprites_data_size;
-extern u8 sprites_palette[];
-extern u32 sprites_palette_size;
+extern u8 font_data[];
+extern u32 font_data_size;
+extern u8 font_palette[];
+extern u32 font_palette_size;
 
 Letter letters[32];
 s32 inv_scalar(const s32 x);
 s32 mul_vec2(s32* a, const s32 b);
-// void render_floor(BgAffineDest* affines, s32 pitch, s32 yaw, u32 lines);
 
 void vbi() {
     mmVBlank();
@@ -104,10 +103,10 @@ int main() {
     for (int i = 0; i < wheel_data_size; i++) {
         vram_buf[i+256] = (wheel_data[i] == 0) ? 0 : wheel_data[i] + 128;
     }
-    memcpy32((void*)MEM_VRAM, vram_buf, VRAM_BG_SIZE/4);
-    memcpy32((void*)MEM_VRAM_OBJ, sprites_data, sprites_data_size/4);
-    memcpy16((void*)(MEM_PAL+128*2), wheel_palette, wheel_palette_size/2);
-    memcpy16((void*)MEM_PAL_OBJ, sprites_palette, sprites_palette_size/2);
+    dma3_cpy((void*)MEM_VRAM, vram_buf, VRAM_BG_SIZE);
+    dma3_cpy((void*)MEM_VRAM_OBJ, font_data, font_data_size);
+    dma_cpy((void*)(MEM_PAL+128*2), wheel_palette, wheel_palette_size/2, 3, DMA_CPY16);
+    dma_cpy((void*)MEM_PAL_OBJ, font_palette, font_palette_size/2, 3, DMA_CPY16);
     free(vram_buf);
 
     txt_bup_1toX((void*)(MEM_VRAM+16384), toncfontTiles, toncfontTilesLen, 8, 0);
@@ -151,8 +150,7 @@ int main() {
     s32 sr = 0;
     s32 cr = 0;
     
-    while (1)
-    {
+    while (1) {
         VBlankIntrWait();
 
         if ((frame & 1) == 1) {
