@@ -34,8 +34,16 @@ ${CMAKE_CURRENT_BINARY_DIR}/res/sound.h
 ${CMAKE_CURRENT_BINARY_DIR}/res/wheel.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_map.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_pal.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/floor.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/floor_map.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/floor_pal.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/city.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/city_map.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/city_pal.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/font.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/font_pal.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/holder.bin
+${CMAKE_CURRENT_BINARY_DIR}/res/holder_pal.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
 )
 
@@ -53,24 +61,48 @@ grit_add_binary_target(img_wheel res/wheel.png
     OUTPUT_MAP ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_map.bin
     OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/wheel_pal.bin
     DEPTH 8
-    OPTIONS -mLa -mRa -pS
+    OPTIONS -gzl -mLa -mRa -pS
+)
+grit_add_binary_target(img_floor res/floor.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/floor.bin
+    OUTPUT_MAP ${CMAKE_CURRENT_BINARY_DIR}/res/floor_map.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/floor_pal.bin
+    DEPTH 8
+    OPTIONS -gzl -mLa -mRa -mzl -pS
+)
+grit_add_binary_target(img_city res/city.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/city.bin
+    OUTPUT_MAP ${CMAKE_CURRENT_BINARY_DIR}/res/city_map.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/city_pal.bin
+    DEPTH 8
+    OPTIONS -gzl -mLs -mR8 -mzl -pS
 )
 grit_add_binary_target(img_font res/font.png
     OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/font.bin
     OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/font_pal.bin
     NO_MAP
     DEPTH 4
-    OPTIONS -pS
+    OPTIONS -gzl -pS
 )
+grit_add_binary_target(img_holder res/holder.png
+    OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/holder.bin
+    OUTPUT_PAL ${CMAKE_CURRENT_BINARY_DIR}/res/holder_pal.bin
+    NO_MAP
+    DEPTH 4
+    OPTIONS -gzl -pS
+)
+# at the time of making this, there's a bug in this function that always make
+# NO_PALETTE option has no effect, here comes the hacky solution
 grit_add_binary_target(img_sky res/sky.png
     OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
-    BITMAP NO_PALETTE
+    OUTPUT_PAL /dev/null
+    BITMAP
     DEPTH 16
 )
 
 add_executable(atparty-2024-demo ${SOURCES})
 
-add_dependencies(atparty-2024-demo soundbank img_wheel img_font img_sky)
+add_dependencies(atparty-2024-demo soundbank img_wheel img_floor img_city img_font img_holder img_sky)
 
 target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
 target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})

@@ -39,6 +39,9 @@ void set_letter_pos(Letter*);
 void init_letters(Letter* letters)
 {
     oam_init(obj_buffer, 128);
+    // draw wheel holder to the last slot
+    obj_buffer[127].attr0 = ATTR0_Y(HOLDER_Y);
+    obj_buffer[127].attr2 = ATTR2_ID(HOLDER_ADDR>>5) | ATTR2_PRIO(2) | ATTR2_PALBANK(1);
 
     for (int i = 0; i < NUM_LETTERS; i++)
     {
@@ -99,12 +102,12 @@ int add_letter(Letter* letters, int letter, vec2_t startingPos) {
         obj_set_attr(letters[i].oam,
             ATTR0_SQUARE | ATTR0_AFF_DBL,
             ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
-            ATTR2_PALBANK(0) | tileOffset(letter));
+            ATTR2_PALBANK(0) | ATTR2_PRIO(1) | tileOffset(letter));
         // shadow
         obj_set_attr(letters[i].shadow,
             ATTR0_SQUARE | ATTR0_AFF_DBL,
             ATTR1_SIZE_32 | ATTR1_AFF_ID(letters[i].id),
-            ATTR2_PALBANK(0) | tileOffset(38));
+            ATTR2_PALBANK(0) | ATTR2_PRIO(1) | tileOffset(38));
 
         set_letter_pos(&letters[i]);    
         return i;
@@ -137,9 +140,6 @@ void update_letter(Letter *letters, Letter *letter, uint tick, uint pos) {
     set_letter_pos(letter);
 }
 
-void update_scale(int tick) {
-}
-
 // TODO: lazy pass whole array so that we can create next letters
 void kill_letter(Letter* letter) {
     int nextLetter = debug_map_char_to_int(debug_text_scroller[debug_text_scroller_ind]);
@@ -167,21 +167,20 @@ void kill_letter(Letter* letter) {
     obj_set_attr(letter->oam,
         ATTR0_SQUARE | ATTR0_AFF_DBL,
         ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
-        ATTR2_PALBANK(0) | tileOffset(nextLetter));
+        ATTR2_PALBANK(0) | ATTR2_PRIO(1) | tileOffset(nextLetter));
     // shadow
     obj_set_attr(letter->shadow,
         ATTR0_SQUARE | ATTR0_AFF_DBL,
         ATTR1_SIZE_32 | ATTR1_AFF_ID(letter->id),
-        ATTR2_PALBANK(0) | tileOffset(38));
+        ATTR2_PALBANK(0) | ATTR2_PRIO(1) | tileOffset(38));
 
     set_letter_pos(letter);
 }
 
-void render_letters(int tick) {
-    update_scale(tick);
-    oam_copy(oam_mem, obj_buffer, 128);
+void render_letters(int wheel_x) {
+    obj_buffer[127].attr1 = ATTR1_X((wheel_x + HOLDER_X) & ATTR1_X_MASK) | ATTR1_SIZE_64x64;
+    dma3_cpy(oam_mem, obj_buffer, OAM_SIZE);
 }
-
 
 // cool effect that will make you extremely nauseated
     // letter->scale += (sine_table[((tick / 4) - pos)&1023] / 4) >> 12; 

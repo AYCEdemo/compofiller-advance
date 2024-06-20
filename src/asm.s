@@ -114,11 +114,9 @@ sine_table:
     .short  -6295, -6097, -5899, -5702, -5504, -5305, -5107, -4908, -4709, -4510, -4311, -4111, -3912, -3712, -3512, -3312
     .short  -3112, -2912, -2712, -2511, -2311, -2110, -1910, -1709, -1508, -1307, -1106,  -905,  -704,  -503,  -302,  -101
 
-    .global wheel_data, wheel_data_size
+    .global wheel_data
 wheel_data:             .incbin "res/wheel.bin"
-1:
     .align 2
-wheel_data_size:        .word 1b-wheel_data
 
     .global wheel_map
 wheel_map:              .incbin "res/wheel_map.bin"
@@ -130,17 +128,53 @@ wheel_palette:          .incbin "res/wheel_pal.bin"
     .align 2
 wheel_palette_size:     .word 1b-wheel_palette
 
-    .global font_data, font_data_size
-font_data:              .incbin "res/font.bin"
+    .global floor_data
+floor_data:             .incbin "res/floor.bin"
+    .align 2
+
+    .global floor_map
+floor_map:              .incbin "res/floor_map.bin"
+    .align 2
+
+    .global floor_palette, floor_palette_size
+floor_palette:          .incbin "res/floor_pal.bin"
 1:
     .align 2
-font_data_size:         .word 1b-font_data
+floor_palette_size:     .word 1b-floor_palette
+
+    .global city_data
+city_data:              .incbin "res/city.bin"
+    .align 2
+
+    .global city_map
+city_map:               .incbin "res/city_map.bin"
+    .align 2
+
+    .global city_palette, city_palette_size
+city_palette:           .incbin "res/city_pal.bin"
+1:
+    .align 2
+city_palette_size:      .word 1b-city_palette
+
+    .global font_data
+font_data:              .incbin "res/font.bin"
+    .align 2
 
     .global font_palette, font_palette_size
 font_palette:           .incbin "res/font_pal.bin"
 1:
     .align 2
 font_palette_size:      .word 1b-font_palette
+
+    .global holder_data
+holder_data:            .incbin "res/holder.bin"
+    .align 2
+
+    .global holder_palette, holder_palette_size
+holder_palette:         .incbin "res/holder_pal.bin"
+1:
+    .align 2
+holder_palette_size:    .word 1b-holder_palette
 
     .global sky_data
 sky_data:               .incbin "res/sky.bin"

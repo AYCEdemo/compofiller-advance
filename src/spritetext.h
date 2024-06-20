@@ -4,6 +4,10 @@
 #define LETTER_SIZE 32
 #define NUM_LETTERS 9
 
+#define HOLDER_ADDR 0x5200
+#define HOLDER_X    -31
+#define HOLDER_Y    17
+
 #include "tonc_types.h"
 #include "tonc_math.h"
 #include "lap.h"
@@ -33,6 +37,6 @@ void init_letters(Letter* letters);
 int add_letter(Letter* letters, int letter, vec2_t startingPos);
 void kill_letter(Letter *letter);
 void update_letter(Letter *letters, Letter *letter, uint tick, uint pos);
-void render_letters(int tick);
+void render_letters(int wheel_x);
 
 #endif
