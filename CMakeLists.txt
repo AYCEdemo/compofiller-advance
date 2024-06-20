@@ -32,7 +32,11 @@ src/asm.s
 ${CMAKE_CURRENT_BINARY_DIR}/res/sound.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/sound.h
 
-${CMAKE_CURRENT_BINARY_DIR}/res/ayceFontSheet.bin
+# ${CMAKE_CURRENT_BINARY_DIR}/res/ayceFontSheet.bin
+
+${CMAKE_CURRENT_SOURCE_DIR}/res/ayceFontSheet.h
+${CMAKE_CURRENT_SOURCE_DIR}/res/ayceFontSheet.s
+
 )
 
 set(GENERATED_RES
@@ -66,4 +70,4 @@ target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})
 target_link_libraries(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY})
 
-gba_create_rom(atparty-2024-demo TITLE "AYCE")
+gba_create_rom(atparty-2024-demo TITLE "AYCE CFADV")

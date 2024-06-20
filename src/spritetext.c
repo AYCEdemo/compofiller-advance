@@ -7,6 +7,8 @@
 #include "tonc_math.h"
 #include "lap.h"
 
+#include "../res/ayceFontSheet.h"
+
 #define MIN_SCALE 448
 #define MID_SCALE 256
 #define MAX_SCALE 196
@@ -32,7 +34,7 @@ extern u32 sprites_data_size;
 extern u8 sprites_palette[];
 extern u32 sprites_palette_size;
 
-char* debug_text_scroller = "          YO!! WHAT IS UP!  AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? CODE: NATT AND TFX   GRAPHICS: GRACIOUSLY CREATED BY HIIJ   MUSIC: SHAMELESSLY REPOSTED FROM MY ENTRY TO CHIPCHOP17. THANKS FOR ORGANIZING SUCH A COOL DISK RAMON!  ";
+char* debug_text_scroller = "          YO!! WHAT IS UP! AYCE HERE WITH SOME COMPOFILLER PRODUCED UNDER EXTREME DURESS! NOTHING LIKE MAKING A PROD MOMENTS BEFORE DEADLINE, EH? DONT MIND THE AFFINE GLITCHES.   CODE: NATT AND TFX   GRAPHICS: HYCATTE   MUSIC: TFX AND NATT.  TUNE FROM CHIPCHOP  THANKS FOR ORGANIZING SUCH A COOL DISK RAMON! MAD KUDOS TO NATT FOR REALLY BRINGING THIS TOGETHER DOWN TO THE WIRE.   GREETZ FLY OUT TO: MOONSHINE  SLIPSTREAM  TILDEARROW  JOKER  SIBCREW  BOTB  TITAN  TAE LVORES CIOMTIETE  VLK  IKS  LAMERS  DESIRE  DEKADENCE  DHS  SMFX  TOMCHI  YQN  AND ALL THE COOL PEOPLE ON THE SCENE!   ... THIS MESSAGE WILL REPEAT ...";
 int debug_text_scroller_len = 0;
 int debug_text_scroller_ind = 0;
 int newWord = FALSE;
@@ -44,8 +46,11 @@ void set_letter_pos(Letter*);
 
 Letter* init_letters(Letter* letters)
 {
-    memcpy32(&tile_mem[4], sprites_data, sprites_data_size);
-    memcpy32(pal_obj_mem, sprites_palette, sprites_palette_size);
+    memcpy32(&tile_mem[4], &ayceFontSheetTiles, ayceFontSheetTilesLen/4);
+    memcpy32(pal_obj_mem, &ayceFontSheetPal, ayceFontSheetPalLen/4);
+
+    // memcpy(&tile_mem[4], sprites_data, sprites_data_size);
+    // memcpy(pal_obj_mem, sprites_palette, sprites_palette_size);
     oam_init(obj_buffer, 128);
 
     for (int i = 0; i < NUM_LETTERS; i++)
@@ -127,7 +132,7 @@ void update_letter(Letter *letters, Letter *letter, uint tick, uint pos) {
 
     int32_t x = comp_to_int(letter->curr_pos.x);
 
-    letter->curr_pos.x -= SCALAR(1);
+    letter->curr_pos.x -= SCALAR(2);
     if (x < -32)
     {
         kill_letter(letter);
@@ -152,7 +157,7 @@ void update_scale(int tick) {
 void kill_letter(Letter* letter) {
     int nextLetter = debug_map_char_to_int(debug_text_scroller[debug_text_scroller_ind]);
     debug_text_scroller_ind++;
-    if (debug_text_scroller_ind > debug_text_scroller_len)
+    if (debug_text_scroller_ind >= debug_text_scroller_len)
         debug_text_scroller_ind = 0;
 
     if (nextLetter == -2) newWord = TRUE;

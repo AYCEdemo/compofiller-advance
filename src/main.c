@@ -52,7 +52,7 @@ s32 mul_vec2(s32* a, const s32 b);
 
 void vbi() {
     mmVBlank();
-    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
+    REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_2D;
     REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(80);
     REG_BG0CNT = BG_CBB(2) | BG_SBB(30) | BG_REG_64x32;
     REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x32;
@@ -111,7 +111,7 @@ int main() {
     free(vram_buf);
 
     txt_bup_1toX((void*)(MEM_VRAM+16384), toncfontTiles, toncfontTilesLen, 8, 0);
-    txt_bup_1toX((void*)(MEM_VRAM+32768), toncfontTiles, toncfontTilesLen, 4, 0);
+    //txt_bup_1toX((void*)(MEM_VRAM+32768), toncfontTiles, toncfontTilesLen, 4, 0);
 
     for (int i = 0; i < 64*32; i++) {
         if (i < 128) se_mem[8][i] = ((i * 2 + 1) << 8) | (i * 2);
@@ -192,9 +192,7 @@ int main() {
             ps += TILT;
         }
 
-        pal_bg_mem[0]=0xffff;
         mmFrame();
-        pal_bg_mem[0]=0;
         uint j = 0;
         for (int i = 0; i < NUM_LETTERS; i++)
         {

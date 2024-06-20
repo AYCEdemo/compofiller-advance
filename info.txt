@@ -1,0 +1,15 @@
+COMPOFILLER ADVANCE by AYCE
+
+Intended to be a much larger demo, but things got in the way.
+Large portion coded at party down to the wire.
+
+COMPOFILLER ADVANCE brings you only the most advanced, handheld compofilling!
+
+code: natt, tfx
+gfx: hycatte
+msx: tfx (with natt fixes)
+
+msx also featured on chipchop17, released by desire.  hopefully you don't mind my repost :D
+
+note: not tested on hardware until moments before screening :DDD
+also note: this is the cool party version!!1 you won't find incomplete demos like this anywhere else!!11
