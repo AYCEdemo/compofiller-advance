@@ -27,7 +27,7 @@ struct {
     u32 cnt;
     u32 stat;
     u16 bgcnt[4];
-    u16 bgofs[4][2];
+    POINT16 bgofs[4];
     BgAffineDest affines[79];
 } dma_data;
 u16 cur_grad = 0;
@@ -64,17 +64,14 @@ void vbi() {
     mmVBlank();
     REG_DISPCNT = DCNT_MODE1 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ;
     REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(80);
-    REG_BG0CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(3);
-    REG_BG1CNT = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(1);
-    REG_BG2CNT = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16 | BG_PRIO(2);
-    REG_BG0VOFS = 128 - 81;
-    REG_BG1VOFS = 256 - 81;
+    REG_BGCNT[0] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(3);
+    REG_BGCNT[1] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(1);
+    REG_BGCNT[2] = BG_CBB(0) | BG_SBB( 0) | BG_AFF_16x16 | BG_PRIO(2);
     REG_DMA[0].src = sky_data_buf;
     REG_DMA[0].dst = pal_bg_mem;
     REG_DMA[0].cnt = DMA_COUNT(1) | DMA_SRC_INC | DMA_DST_RELOAD | DMA_AT_HBLANK | DMA_REPEAT | DMA_16NOW;
     pal_bg_mem[0] = sky_data[0];
     cur_grad = MAX_GRAD;
-    render_letters(120);
 }
 
 void vci() {
@@ -113,8 +110,8 @@ int main() {
     dma_data.bgcnt[0] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(0);
     dma_data.bgcnt[1] = BG_CBB(2) | BG_SBB(28) | BG_REG_64x64 | BG_8BPP | BG_PRIO(0);
     dma_data.bgcnt[2] = BG_CBB(1) | BG_SBB(26) | BG_AFF_64x64 | BG_WRAP | BG_PRIO(1);
-    dma_data.bgofs[0][1] = 384 - 160;
-    dma_data.bgofs[1][1] = 512 - 160;
+    dma_data.bgofs[0].y = 384 - 160;
+    dma_data.bgofs[1].y = 512 - 160;
 
     // prepare graphics
     // grit couldn't bake offsets for some reason so we have to manually patch it
@@ -174,6 +171,7 @@ int main() {
     REG_DISPSTAT = DSTAT_VBL_IRQ;
 
     int frame = 0;
+    s32 bgx[5] = {0, 0, 0, 0, 0};
     s32 nsr = 0;
     s32 ncr = 0;
     s32 sr = 0;
@@ -192,14 +190,20 @@ int main() {
             ncr = sine_table[(frame/2+256)&1023];
         }
 
-        s32 px = 120;
-        s32 py = 23;
+        REG_BG_OFS[0].y = 128 - 81;
+        REG_BG_OFS[1].y = 256 - 81;
+        REG_BG_OFS[0].x = bgx[0] >> 8;
+        REG_BG_OFS[1].x = bgx[2] >> 8;
+        dma_data.bgofs[0].x = bgx[4] >> 8;
+        dma_data.bgofs[1].x = bgx[3] >> 8;
         REG_BG2PA = cr >> 7;
         REG_BG2PB = sr >> 7;
         REG_BG2PC = -sr >> 7;
         REG_BG2PD = cr >> 7;
-        REG_BG2X = ((-px * cr - py * sr) >> 7) + (64 << 8);
-        REG_BG2Y = ((px * sr - py * cr) >> 7) + (64 << 8);
+        s32 tx = (((bgx[1] >> 8) + 384) & 511) - 384;
+        REG_BG2X = ((tx * cr - 23 * sr) >> 7) + (64 << 8);
+        REG_BG2Y = ((-tx * sr - 23 * cr) >> 7) + (64 << 8);
+        render_letters(bgx[1] >> 8);
 
         s32 sf = sine_table[frame&1023];
         s32 cf = sine_table[(frame+256)&1023];
@@ -230,6 +234,11 @@ int main() {
         pal_bg_mem[0] = 0;
 
         frame++;
+        bgx[0] -= 0x25;
+        bgx[1] -= 0x55;
+        bgx[2] -= 0x80;
+        bgx[3] += 0x180;
+        bgx[4] += 0x200;
     }
     return 0;
 }

@@ -178,7 +178,7 @@ void kill_letter(Letter* letter) {
 }
 
 void render_letters(int wheel_x) {
-    obj_buffer[127].attr1 = ATTR1_X((wheel_x + HOLDER_X) & ATTR1_X_MASK) | ATTR1_SIZE_64x64;
+    obj_buffer[127].attr1 = ATTR1_X(-(wheel_x + HOLDER_X) & ATTR1_X_MASK) | ATTR1_SIZE_64x64;
     dma3_cpy(oam_mem, obj_buffer, OAM_SIZE);
 }
 
