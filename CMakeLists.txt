@@ -88,11 +88,12 @@ grit_add_binary_target(img_holder res/holder.png
     DEPTH 4
     OPTIONS -gzl -pS
 )
-# at the time of making this, there's a bug in this function that always make
-# NO_PALETTE option has no effect, here comes the hacky solution
+# at the time of making this, there's a bug in grit function that always make
+# it assume that the palette file exists even if NO_PALETTE option is specified
+# here comes the hacky solution
+file(TOUCH ~$img_sky.pal.bin)
 grit_add_binary_target(img_sky res/sky.png
     OUTPUT_GFX ${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
-    OUTPUT_PAL /dev/null
     BITMAP
     DEPTH 16
 )
