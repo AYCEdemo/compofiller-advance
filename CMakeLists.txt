@@ -24,6 +24,7 @@ set(CMAKE_PROJECT_VERSION_MAJOR 0)
 set(CMAKE_PROJECT_VERSION_MINOR 1)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 
+make_directory(${CMAKE_CURRENT_BINARY_DIR}/res)
 set(SOURCES
 src/main.c
 src/spritetext.c
@@ -46,10 +47,6 @@ ${CMAKE_CURRENT_BINARY_DIR}/res/holder.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/holder_pal.bin
 ${CMAKE_CURRENT_BINARY_DIR}/res/sky.bin
 )
-
-set(GENERATED_RES
-)
-list(APPEND SOURCES ${GENERATED_RES})
 
 mm_add_soundbank_target(soundbank
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/res/sound.bin
