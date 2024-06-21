@@ -8,11 +8,11 @@
 
 #include "res/sound.h"
 
+#include "lap.h"
 #include "spritetext.h"
 
 #define MM_CHS      8
 #define MAX_GRAD    30
-#define TILT        (0x10000 / 38)
 
 typedef struct {
     u8 mod[MM_SIZEOF_MODCH*MM_CHS];
@@ -31,7 +31,6 @@ struct {
     BgAffineDest affines[79];
 } dma_data;
 u16 cur_grad = 0;
-Letter letters[32];
 u16* sky_data_buf;
 
 extern u8 soundbank[];
@@ -55,9 +54,6 @@ extern u8 holder_data[];
 extern u8 holder_palette[];
 extern u32 holder_palette_size;
 extern u16 sky_data[];
-
-s32 inv_scalar(const s32 x);
-s32 mul_vec2(s32* a, const s32 b);
 
 void vbi() {
     REG_DMA[0].cnt = 0;
@@ -101,7 +97,7 @@ int main() {
     REG_DISPCNT = DCNT_BLANK;
     REG_DISPSTAT = 0;
     REG_BLDCNT = BLD_BG2 | BLD_BLACK;
-    memset32(&dma_data, 0, sizeof(dma_data)/4);
+    dma3_fill(&dma_data, 0, sizeof(dma_data));
     // DMA0 can't read from cart, need to copy to RAM
     sky_data_buf = malloc(80*2);
     dma_cpy(sky_data_buf, &sky_data[1], 80, 3, DMA_CPY16);
@@ -158,7 +154,7 @@ int main() {
     mmInit(&mm_setup);
     mmStart(MOD_WILLOWS, MM_PLAY_LOOP);
 
-    init_letters(letters);
+    init_letters();
 
     vid_vsync(); // just to be safe, i'm sure irq_enable() also sets STAT
     irq_init(NULL);
@@ -207,10 +203,10 @@ int main() {
 
         s32 sf = sine_table[frame&1023];
         s32 cf = sine_table[(frame+256)&1023];
-        s32 ps = (1 << 16) - TILT * 39;
+        s32 ps = (1 << 16) - FLOOR_TILT * 39;
         for (int i = 0; i < 79; i++) {
             s32 ips = inv_scalar(ps);
-            s32 sc[2] = {sf, cf};
+            int32_t sc[2] = {sf, cf};
             mul_vec2(sc, ips);
             s32 pa = -sc[1];
             s32 pb = sc[0];
@@ -220,18 +216,13 @@ int main() {
             dma_data.affines[i].pc = pc >> 7;
             dma_data.affines[i].dx = (-(120 * pa + (i - 39) * pb)) >> 7;
             dma_data.affines[i].dy = (-(120 * pc + (i - 39) * pd)) >> 7;
-            ps += TILT;
+            ps += FLOOR_TILT;
         }
-        uint j = 0;
-        for (int i = 0; i < NUM_LETTERS; i++)
-        {
-            update_letter(letters, &letters[i], frame, j * 64);
-            j++;
-        }
+        update_letters(frame);
 
-        pal_bg_mem[0] = 0xffff;
+        // pal_bg_mem[0] = 0xffff;
         mmFrame();
-        pal_bg_mem[0] = 0;
+        // pal_bg_mem[0] = 0;
 
         frame++;
         bgx[0] -= 0x25;
