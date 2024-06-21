@@ -14,14 +14,14 @@ set(MAXMOD_INCLUDE_DIR ${DEVKITPRO}/libgba/include)
 set(MAXMOD_LIBRARY_DIR ${DEVKITPRO}/libgba/lib)
 set(MAXMOD_LIBRARY mm)
 
-project(atparty-2024-demo C ASM)
+project(compofiller-advance C ASM)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_ASM_FLAGS "-D__ASSEMBLY__")
 
-set(CMAKE_PROJECT_VERSION_MAJOR 0)
-set(CMAKE_PROJECT_VERSION_MINOR 1)
+set(CMAKE_PROJECT_VERSION_MAJOR 1)
+set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 
 make_directory(${CMAKE_CURRENT_BINARY_DIR}/res)
@@ -98,12 +98,12 @@ grit_add_binary_target(img_sky res/sky.png
     DEPTH 16
 )
 
-add_executable(atparty-2024-demo ${SOURCES})
+add_executable(compofiller-advance ${SOURCES})
 
-add_dependencies(atparty-2024-demo soundbank img_wheel img_floor img_city img_font img_holder img_sky)
+add_dependencies(compofiller-advance soundbank img_wheel img_floor img_city img_font img_holder img_sky)
 
-target_include_directories(atparty-2024-demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
-target_link_directories(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY_DIR})
-target_link_libraries(atparty-2024-demo PRIVATE ${MAXMOD_LIBRARY})
+target_include_directories(compofiller-advance PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${MAXMOD_INCLUDE_DIR})
+target_link_directories(compofiller-advance PRIVATE ${MAXMOD_LIBRARY_DIR})
+target_link_libraries(compofiller-advance PRIVATE ${MAXMOD_LIBRARY})
 
-gba_create_rom(atparty-2024-demo TITLE "AYCE")
+gba_create_rom(compofiller-advance TITLE "CMPOFLLR ADV")
